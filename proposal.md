@@ -194,15 +194,14 @@ As examples of uses of generic methods, the implementation includes typed map
 and pre-order fold operations with the following generic signatures:
 
 ```dart
-  BinaryTreeNode<K, U> map<U>(U f(V x))
-  S foldPre<S>(S init, S f(V t, S s)) {
+  BinaryTreeNode<K, U> map<U>(U f(V x)) S foldPre<S>(S init, S f(V t, S s))
 ```
 
 Note that here the "K" and "V" type parameters are bound by the enclosing class,
 and describe the types of the keys and the values of the receiver tree.  The "U"
 type parameter is bound by the map function, and is in scope in the return type
 of map, in its parameter list, and in the scope of its body.  The "U" type
-descibes the type of the values of the output tree.  Similarly, the "S" type
+describes the type of the values of the output tree.  Similarly, the "S" type
 parameter to foldPre describes the type of the value computed by the fold, and
 is similarly scoped.
 
@@ -210,10 +209,10 @@ The implementation of tree nodes also contains two static helper functions
   factoring out the logic for dealing with possibly null tree nodes.
 
 ```dart
-  BinaryTreeNode<K, U>
-    mapOpt<K extends Comparable<K>, V, U>(BinaryTreeNode<K, V> t, U f(V x));
+  static BinaryTreeNode<K, U> mapOpt<K extends Comparable<K>, V, U>(
+      BinaryTreeNode<K, V> t, U f(V x))
   static S foldPreOpt<K extends Comparable<K>, V, S>(
-    BinaryTreeNode<K, V> t, S init, S f(V t, S s))
+      BinaryTreeNode<K, V> t, S init, S f(V t, S s))
 ```
 
 Note that here that the "K" and "V" type parameters are bound by the functions
@@ -389,8 +388,8 @@ where the *```S_i```* are type parameters in scope in the rest of the type.
 A function type with a non-empty type parameter list is mal-formed if it appears
 as a sub-component of any other type: that is, as an argument to a generic class
 or function, as a bound on a type parameter, or as a parameter or return type in
-another function type (in the current proposal, there is any case no syntax to
-introduce such a type, and so this restriction may be moot).
+another function type (in the current proposal, there is in any case no syntax
+to introduce such a type, and so this restriction may be moot).
 
 #### Function subtyping
 
