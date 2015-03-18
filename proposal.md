@@ -356,9 +356,11 @@ a parse as an instantiation expression only when the next token after the
 closing ```>``` is an open parenthesis (```(```) or is otherwise not a valid
 first token for an expression production.  This ensures that
 ```[f<int, String>(3)]``` parses as a single element list, and ```g(f<int,
-String>(3))``` parses as an application of ```g``` to a single argument.  The
-alternative parses, while in principle valid, are in practice unlikely as
-comparison with a type literal is not a commong pattern.
+String>(3))``` parses as an application of ```g``` to a single argument.  As a
+consequence of this, code such as ```g(x < y, z > (3 + 4))``` which currently
+parses as an application of ```g``` to two arguments will be reinterpreted in a
+breaking fashion, and will need to be re-parenthesized to be valid (e.g. as
+```g((x < y), z > (3 + 4))```).
 
 > Commentary: This syntax is not backwards compatible, since it introduces a
 > grammatical ambiguity between an existing construct (comparison) and a new
