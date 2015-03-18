@@ -89,7 +89,7 @@ of the mapping function ("f") has the following implications.
 1.  The reified runtime type of the resulting Iterable is
     ```Iterable<dynamic>```.  Consequently, checked mode checks cannot be relied on to
     check that the result of a call to map is used appropriately, since Iterable
-    is a subtype of any concrete instantation of Iterable.
+    is a subtype of any concrete instantiation of Iterable.
 2.  The static type of the resulting Iterable is
     Iterable<dynamic>. Consequently, the analyzer cannot provide warnings about
     incorrect uses of the result.
@@ -361,11 +361,27 @@ String>(3))``` parses as an application of ```g``` to a single argument.  The
 alternative parses, while in principle valid, are in practice unlikely as
 comparison with a type literal is not a commong pattern.
 
-An alternative resolution to the ambiguity is to introduce new tokens for
-generic instantiations, such as ```<:``` and ```:>```.  This would result in an
-instantiation syntax of ```p<:S_0, ..., S_n:>``` (and possibly a corresponding
-change in the generic method declaration syntax).  The lack of symmetry to the
-generic class syntax makes this a less preferred choice.
+> Commentary: This syntax is not backwards compatible, since it introduces a
+> grammatical ambiguity between an existing construct (comparison) and a new
+> construct (generic instantiation) and in some ambiguous cases resolves it in
+> favor of the new construct.  The result is that some correct existing programs
+> could break after this feature is introduced.  An alternative resolution to the
+> ambiguity would be to always prefer the original parse in ambiguous
+> cases. This would essentially have the effect of requiring that all generic
+> instantiations with multiple arguments which appear in sequence contexts
+> (e.g. argument lists and list literals) be parenthesized.  This seems like a
+> more pervasive restriction than the suggested alternative, which only disallows
+> a few very specific patterns of code.
+>
+> The ambiguity could be avoided entirely by introducing new tokens for generic
+> instantiations, such as ```<:``` and ```:>```.  This would result in an
+> instantiation syntax of ```p<:S_0, ..., S_n:>``` (and possibly a corresponding
+> change in the generic method declaration syntax).  The lack of symmetry to the
+> generic class syntax makes this a less preferred choice.
+>
+> This proposal recommends a small breaking change that should be unlikely to
+> occur in practice over making a permanent commitment to a less desirable
+> syntax.
 
 ### Static typing
 
@@ -383,7 +399,7 @@ and
 
 *```<S_0 extends B_0, ..., S_m extends B_m>(T_0, ..., T_n, {T_{n+1} p_{n+1}, ..., T_{n+k} p_{n+k}}) -> T```*
 
-where the *```S_i```* are type parameters in scope in the rest of the type. 
+where the *```S_i```* are type parameters in scope in the rest of the type.
 
 A function type with a non-empty type parameter list is mal-formed if it appears
 as a sub-component of any other type: that is, as an argument to a generic class
@@ -399,7 +415,6 @@ Two generic function types GT_1 and GT_2 are subtypes if:
 2. ```GT_2 = <T_0 extends C_0, ..., T_m extends C_m>FT_2``` where FT_2 is a standard (non-generic) function type
 3. ```C_i <: B_i``` for i in 0...m
 4. ```[T_i/S_i]FT_1 <: FT_2```  (that is, FT_1 is a subtype of FT_2, where all occurrences of the S_i in FT_1 are replaced with T_i).
-
 
 A generic function type GT_1 is a subtype of a standard function type FT_2 if:
 
@@ -444,8 +459,19 @@ the replacement of the actual parameters with ```dynamic``` in the case of an
 arity mismatch).
 
 Any use of a generic function or method outside of an instantiation expression
-is treated as an implicit instantation with the appropriate number of arguments,
+is treated as an implicit instantiation with the appropriate number of arguments,
 each set to ```dynamic```.
+
+> Commentary: A long standing concern with adding generic methods to Dart is
+> that the absence of inference of type arguments for generic instantiations may
+> prove burdensome for programmers, but that a suitable inference mechanism or
+> tooling solution may prove infeasiable.  This proposal is designed to allow
+> library programmers who wish to use generics (despite the absence of
+> inference) to do so, without unduly burdening client code that wishes to avoid
+> the overhead of providing generic instantiation arguments even in the absence
+> of inference.  However, the original concern remains: with generic methods
+> will come additional pressure for some form of inference.  The general issue
+> of inference is discussed further in the section below on Alternatives.
 
 ### Dynamic semantics
 
@@ -468,7 +494,7 @@ as ```f```, except with each ```S_i``` substituted for the corresponding
 that two instantiations of the same generic function with the same type
 parameters will return the same object (nor is it forbidden).
 
-#### Generic instantation expressions (method application)
+#### Generic instantiation expressions (method application)
 
 Let ```p<S_0, ..., S_n>(e0, ..., en)``` be an invocation of a generic
 instantiation expression where ```p``` is a path which evaluates to a reference
@@ -486,7 +512,7 @@ applied to ```(e0, ..., en)```, with each ```S_i``` substituted for the
 corresponding ```T_i``` in the definition of ```m``` using the usual capture
 avoiding substitution.
 
-#### Generic instantation expressions (method closurization)
+#### Generic instantiation expressions (method closurization)
 
 Let ```p<S_0, ..., S_n>``` be a generic instantiation expression in a non-method
 invocation context where ```p``` is a path which evaluates to a reference to an
@@ -511,6 +537,12 @@ Iff ```identical(o1, o2) && S_0 == T_0 && ... && S_n == T_n``` then ```o1.m<S_0,
 > types as well as the receiver.  This seems overly strong, since it is not
 > clear that it is possible for the programmer to ensure that this is the case.
 
+#### Generic instantiation expressions (non-generic functions)
+
+Let ```p<S_0, ..., S_n>``` be a generic instantiation expression where ```p```
+is a path which evaluates to something which is not a generic method or
+function.  In this case, a NoSuchMethodError is thrown.
+
 #### Implicit generic instantiations (escaping uses)
 
 Let ```p``` be an expression which is not in the context of a generic
@@ -521,15 +553,43 @@ function with the appropriate number of type parameters, all set to
 ```dynamic``` .
 
 > Commentary: Note that combined with the lack of a requirement for
-> canonicalization on instantations, this implies that implementations are free
+> canonicalization on instantiations, this implies that implementations are free
 > to implement instantiation in such a way as to make ```identical(f, f)```
 > evaluate to false if ```f``` is a generic method.  While not fundamentally
-> different from the fact that ```identical(o.m, o.m)``` may also not hold, this
-> is admittedly a somewhat surprising property.  Alternatives would be to either
-> require canonicalization of instantations (which seems potentially too
-> expensive), or to simply forbid escaping uses of generics (restricting
-> implicit instantiations to application sites).  Requiring canonicalization
-> only for implicit instantiations might also be acceptable.
+> different from the fact that ```identical(m, m)``` may also not hold if m is
+> an instance method, this is still admittedly a somewhat surprising property.
+> Alternatives would be to either require canonicalization of instantiations
+> (which seems potentially too expensive), or to simply forbid escaping uses of
+> generics (restricting implicit instantiations to application sites).
+> Requiring canonicalization only for implicit instantiations might also be
+> acceptable.
+
+> Commentary: this also has the somewhat following somewhat surprising behavior
+> (example from Gilad Bracha):
+> ```dart
+  f<T>(T t) => T;
+  var g = f; // g is
+  f<dynamic> f<String>("a"); // legal, returns String
+  g<String>("a"); // illegal, throws an error
+  ```
+> The escaping of use of ```f``` binds ```g``` to an instantiated version of
+> ```f``` rather than to the raw version.  This has somewhat surprising
+> behavior, and introduces a kind of implicit coercion into Dart which is not
+> entirely desireable.  Permitting implicit instantiations of this form has the
+> benefit of making generic versions of functions more likely to be backwards
+> compatible with their non-generic versions.  However, it is not an essential
+> component of the proposal, and this example may argue for taking a more
+> restrictive tack and making uninstantiated escaping uses a static error.  This
+> could be done without eliminating the subtyping rule between generic function
+> types and compatible non-generic function types which permits overriding a
+> non-generic function with a compatible generic function.  This would result in
+> the somewhat surprising property that the assignment above would be rejected
+> despite the type of ```f``` being a subtype of the type of ```g```.  This
+> might suggest going further and also eliminating the subtyping rule between
+> generics and non-generics.  However, this seems like a significant loss of
+> expressiveness: very reasonable code would be rejected.  On balance, the
+> programmer surprise due to the rejecting the above code despite the subtyping
+> seems small and easily explained in error messages.  
 
 ## Alternatives
 
@@ -578,8 +638,8 @@ non-standard typing rules.
 
 One potentially interesting point in the space would be to allow predicative but
 non-prenex type abstraction: that is, allow generic functions to be passed
-around as first class values (as opposed to only allowing instantations of
-generic functions to be passed around), while forbidding the instantation of
+around as first class values (as opposed to only allowing instantiations of
+generic functions to be passed around), while forbidding the instantiation of
 generic type parameters with universal types.  This would allow functions to be
 parameterized over (and to return) generic functions, and data structures to
 contain generic functions.
@@ -603,7 +663,7 @@ in expressive power.
 
 This proposal for the most part does not rule out the possibility of adding
 non-prenex polymorphism to the language at a later date.  The main point of
-future incompatibilty lies in the implicit instantation of generic functions on
+future incompatibilty lies in the implicit instantiation of generic functions on
 escaping uses: that is, treating things like ```var f = g``` where ```T g<T>(T
 x) => x``` is a generic function with a single type parameter as implicitly
 meaning ```var f = g<dynamic>```.  With non-prenex polymorphism, it would be
@@ -645,7 +705,7 @@ The design of this proposal was driven by the desire to integrate naturally into
 the existing Dart language.  The additional syntax required is small.  Prenex
 polymorphism matches the style of top level class genericity already present in
 Dart. Implicit instantiation with dynamic is a natural analog of the current
-Dart semantics for implicit instantation of generic class types.
+Dart semantics for implicit instantiation of generic class types.
 
 The choice of subtyping rules along with implicit instantion allows generic code
 to integrate fairly cleanly with non-generic code, and provides a migration path
@@ -661,7 +721,7 @@ Some of the implications and limitations of this proposal are discussed in line
 with the text.
 
 Issues with grammatical ambiguity are discussed in the section on generic
-instantiation syntax above.  Adding the preferred instantation syntax would be a
+instantiation syntax above.  Adding the preferred instantiation syntax would be a
 small breaking change in the language, and would require in some rare cases that
 valid programs be parenthesized differently to produce the desired parse.
 Tooling should be aware of the potential ambiguity and produce useful error
@@ -670,8 +730,8 @@ messages where possible.
 Issues with forwards compatibility with respect to more powerful generic systems
 and with respect to inference of type arguments are discussed in the previous
 section.  For the most part, this proposal is forward compatible with rank-2 and
-higher polymorphism, except for the implicit instantation rule for escaping uses
-of generic methods.  Implicit instantation for both escaping uses and for
+higher polymorphism, except for the implicit instantiation rule for escaping uses
+of generic methods.  Implicit instantiation for both escaping uses and for
 invocations is a point of potential forwards incompatibility for inference of
 type arguments, as discussed above.
 
