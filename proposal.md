@@ -66,7 +66,6 @@ Requests for generic methods come up frequently.  There's a longstanding feature
 request [here](https://code.google.com/p/dart/issues/detail?id=254) with 163
 stars.  The topic comes up frequently in discussions.  Some examples follow:
 
-  * **[https://groups.google.com/a/google.com/d/msg/dart-discuss/Vcz4cdEmJrU/wbAOGwz0YGAJ](https://groups.google.com/a/google.com/d/msg/dart-discuss/Vcz4cdEmJrU/wbAOGwz0YGAJ)**
   * **[https://groups.google.com/a/dartlang.org/d/msg/misc/0CWCCE3Iffc/oJlwOxamsMsJ](https://groups.google.com/a/dartlang.org/d/msg/misc/0CWCCE3Iffc/oJlwOxamsMsJ)**
   * **[https://groups.google.com/a/dartlang.org/d/msg/misc/uHPi5fM9sLQ/v2Y4LJcar5YJ](https://groups.google.com/a/dartlang.org/d/msg/misc/uHPi5fM9sLQ/v2Y4LJcar5YJ)**
   * **[https://groups.google.com/a/dartlang.org/d/msg/misc/KqegdaJzm6A/cK2JfwewMMEJ](https://groups.google.com/a/dartlang.org/d/msg/misc/KqegdaJzm6A/cK2JfwewMMEJ)**
@@ -87,13 +86,13 @@ The inability to provide a generic method parameter to describe the return type
 of the mapping function ("f") has the following implications.
 
 1.  The reified runtime type of the resulting Iterable is
-    ```Iterable<dynamic>```.  Consequently, checked mode checks cannot be relied on to
+    `Iterable<dynamic>`.  Consequently, checked mode checks cannot be relied on to
     check that the result of a call to map is used appropriately, since Iterable
     is a subtype of any concrete instantiation of Iterable.
 2.  The static type of the resulting Iterable is
-    Iterable<dynamic>. Consequently, the analyzer cannot provide warnings about
+    `Iterable<dynamic>`. Consequently, the analyzer cannot provide warnings about
     incorrect uses of the result.
-3.  The static type of the resulting Iterable is ```Iterable<dynamic>```.
+3.  The static type of the resulting Iterable is `Iterable<dynamic>`.
     Consequently tooling cannot in general provide useful completions based on
     the type of the elements of the iterable
 
@@ -194,7 +193,8 @@ As examples of uses of generic methods, the implementation includes typed map
 and pre-order fold operations with the following generic signatures:
 
 ```dart
-  BinaryTreeNode<K, U> map<U>(U f(V x)) S foldPre<S>(S init, S f(V t, S s))
+  BinaryTreeNode<K, U> map<U>(U f(V x))
+  S foldPre<S>(S init, S f(V t, S s))
 ```
 
 Note that here the "K" and "V" type parameters are bound by the enclosing class,
