@@ -571,8 +571,8 @@ function with the appropriate number of type parameters, all set to
 >
 ```dart
   f<T>(T t) => T;
-  var g = f; // g is
-  f<dynamic> f<String>("a"); // legal, returns String
+  var g = f; // g is f<dynamic>
+  f<String>("a"); // legal, returns String
   g<String>("a"); // illegal, throws an error
 ```
 > The escaping of use of ```f``` binds ```g``` to an instantiated version of
