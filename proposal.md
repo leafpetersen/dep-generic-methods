@@ -684,13 +684,13 @@ would allow the declaration ```var f = g``` from above to be interpreted as
 binding ```f``` to a function with runtime type ```<T>(T) -> T``` rather than a
 function with runtime type ```dynamic -> dynamic```.  The subtyping rules as
 written allow the former type to be used in many (but not all) of the same
-contexts as the second: in particular, the former can be used at any type which
-is an instantiation of it.  This approach is appealing from a forward
-compatibility standpoint, but has the unfortunate consequence of introducing a
-fair bit of the complexity of reifying universal types for a fairly small
-increase in forwards compatibility.  It is also somewhat harder to explain to
-programmers, since it introduces a notion of object type which is otherwise not
-explicitly present in the semantics of the language.
+contexts as the second.  A more generous subtyping rule would allow the former
+type to be used at any of its instantiation types.  This approach is appealing
+from a forward compatibility standpoint, but has the unfortunate consequence of
+introducing a fair bit of the complexity of reifying universal types for a
+fairly small increase in forwards compatibility.  It is also somewhat harder to
+explain to programmers, since it introduces a notion of object type which is
+otherwise not explicitly present in the semantics of the language.
 
 Other restrictions of non-prenex polymorphic languages (e.g. rank-2
 polymorphism) could also be considered, though it is not clear that there is any
