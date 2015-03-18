@@ -344,9 +344,8 @@ Static method syntax inherits the function declaration syntax above.
 #### Expressions
 
 The expression syntax is extended with generic instantiation expressions of the
-form ```p<S_0, ..., S_n>```, denoting the instantiation of a generic function or
-method with the types ```S_0, ..., S_n```, where ```p``` is an identifier, or a
-path of the form ```e.identifier``` for some expression ```e```.
+form ```e<S_0, ..., S_n>```, denoting the instantiation of a generic function or
+method with the types ```S_0, ..., S_n```.
 
 This syntax introduces a grammatical ambiguity when it appears in a sequence
 context, since (for example) ```[f<int, String>(3)]``` could be parsed either as
@@ -375,7 +374,7 @@ comparison with a type literal is not a commong pattern.
 >
 > The ambiguity could be avoided entirely by introducing new tokens for generic
 > instantiations, such as ```<:``` and ```:>```.  This would result in an
-> instantiation syntax of ```p<:S_0, ..., S_n:>``` (and possibly a corresponding
+> instantiation syntax of ```e<:S_0, ..., S_n:>``` (and possibly a corresponding
 > change in the generic method declaration syntax).  The lack of symmetry to the
 > generic class syntax makes this a less preferred choice.
 >
@@ -440,9 +439,9 @@ change in the subtype relation.
 
 #### Expression typing
 
-Let ```f``` be a path to a generic function or method with static type ```<T_0
-extends B_0, ..., T_m extends B_m>FT```.  Let ```f<S_0, ..., S_n>``` be an
-instantiation expression.
+Let ```f``` be a reference to a generic function or method with static type
+```<T_0 extends B_0, ..., T_m extends B_m>FT```.  Let ```f<S_0, ..., S_n>``` be
+an instantiation expression.
 
 It is a static warning if ```m != n```.  It is a static warning if ```S_i <:
 B_i``` does not hold for all i.  It is a static warning if any of the ```S_i```
@@ -477,8 +476,8 @@ each set to ```dynamic```.
 
 #### Generic instantiation expressions (functions)
 
-Let ```p<S_0, ..., S_n>``` be a generic instantiation expression where ```p```
-is a path to a generic function or static generic method ```f``` (using the same
+Let ```e<S_0, ..., S_n>``` be a generic instantiation expression where ```e```
+evaluates to a generic function or static generic method ```f``` (using the same
 resolution rules for unqualified identifiers as is done with non-generic
 functions) .  It is a checked mode error if the number of generic type
 parameters expected by ```f``` is different from ```n```.  In unchecked mode,
@@ -496,15 +495,16 @@ parameters will return the same object (nor is it forbidden).
 
 #### Generic instantiation expressions (method application)
 
-Let ```p<S_0, ..., S_n>(e0, ..., en)``` be an invocation of a generic
-instantiation expression where ```p``` is a path which evaluates to a reference
-to an instance method of the form ```o.m``` where ```o.m``` resolves to generic
-method (using the same method resolution rules as for ordinary methods).  It is
-a checked mode error if the number of generic type parameters expected by
-```m``` is different from ```n```.  In unchecked mode, any additional type
-parameters are ignored, and any missing type parameters are filled in with
-dynamic.  It is a checked mode error if any of the type parameters are not
-subtypes of the bounds on the formal type parameters to ```m``` .
+Let ```e<S_0, ..., S_n>(e0, ..., en)``` be an invocation of a generic
+instantiation expression where ```e``` is an expression which evaluates to a
+reference to an instance method of the form ```o.m``` where ```o.m``` resolves
+to generic method (using the same method resolution rules as for ordinary
+methods).  It is a checked mode error if the number of generic type parameters
+expected by ```m``` is different from ```n```.  In unchecked mode, any
+additional type parameters are ignored, and any missing type parameters are
+filled in with dynamic.  It is a checked mode error if any of the type
+parameters are not subtypes of the bounds on the formal type parameters to
+```m``` .
 
 Otherwise, let ```T_0, ..., T_n``` be the formal type parameters for ```m```.
 Evaluation proceeds exactly as if ```m``` were defined as a non-generic method
@@ -514,15 +514,15 @@ avoiding substitution.
 
 #### Generic instantiation expressions (method closurization)
 
-Let ```p<S_0, ..., S_n>``` be a generic instantiation expression in a non-method
-invocation context where ```p``` is a path which evaluates to a reference to an
-instance method of the form ```o.m``` where ```o.m``` resolves to generic method
-(using the same method resolution rules as for ordinary methods).  It is a
-checked mode error if the number of generic type parameters expected by ```m```
-is different from ```n```.  In unchecked mode, any additional type parameters
-are ignored, and any missing type parameters are filled in with dynamic.  It is
-a checked mode error if any of the type parameters are not subtypes of the
-bounds on the formal type parameters to ```m```.
+Let ```e<S_0, ..., S_n>``` be a generic instantiation expression in a non-method
+invocation context where ```e``` is an expression which evaluates to a reference
+to an instance method of the form ```o.m``` where ```o.m``` resolves to generic
+method (using the same method resolution rules as for ordinary methods).  It is
+a checked mode error if the number of generic type parameters expected by
+```m``` is different from ```n```.  In unchecked mode, any additional type
+parameters are ignored, and any missing type parameters are filled in with
+dynamic.  It is a checked mode error if any of the type parameters are not
+subtypes of the bounds on the formal type parameters to ```m```.
 
 Otherwise, the closurization of the generic method follows the definition of
 closurization of a non-generic method, except that in the bodies of the
@@ -539,15 +539,15 @@ Iff ```identical(o1, o2) && S_0 == T_0 && ... && S_n == T_n``` then ```o1.m<S_0,
 
 #### Generic instantiation expressions (non-generic functions)
 
-Let ```p<S_0, ..., S_n>``` be a generic instantiation expression where ```p```
-is a path which evaluates to something which is not a generic method or
+Let ```e<S_0, ..., S_n>``` be a generic instantiation expression where ```e```
+is an expression which evaluates to something which is not a generic method or
 function.  In this case, a NoSuchMethodError is thrown.
 
 #### Implicit generic instantiations (escaping uses)
 
-Let ```p``` be an expression which is not in the context of a generic
-instantiation (that is, ```p``` is not immediately syntactically applied to a
-list of type arguments).  If ```p``` evaluates to a generic method or function,
+Let ```e``` be an expression which is not in the context of a generic
+instantiation (that is, ```e``` is not immediately syntactically applied to a
+list of type arguments).  If ```e``` evaluates to a generic method or function,
 then it is treated as an implicit instantiation of the generic method or
 function with the appropriate number of type parameters, all set to
 ```dynamic``` .
@@ -712,7 +712,11 @@ to integrate fairly cleanly with non-generic code, and provides a migration path
 for APIs to add genericity.  Making a method generic by replacing uses of
 dynamic with generic parameters is a non-breaking change from the standpoint of
 clients that invoke the method (though it remains a breaking change from the
-standpoint of clients that override the method).
+standpoint of clients that override the method).  Forbidding implicit
+instantiation of escaping uses as discussed above would mean that replacing a
+non-generic method with a generic method would also break at any tear-off
+points.  However, so long as implicit instantiation at call sites is permitted,
+the backwards compatibility at invocation sites would be maintained.
 
 
 ###  Limitations and forwards incompatibilities
