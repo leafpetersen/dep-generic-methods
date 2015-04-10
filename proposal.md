@@ -312,8 +312,8 @@ functions and methods may not be abstracted over generic functions.
 Technically, the proposal is to add prenex, predicative F-bounded quantification
 to Dart methods and functions.
 
-Getters and setters may not be generics.  Similarly, constructors, named
-constructors and factory constructors may not be generics.
+Getters and setters may not be generic.  Similarly, constructors, named
+constructors and factory constructors may not be generic.
 
 ### Syntax
 
@@ -324,7 +324,7 @@ list of type parameters, written using the same syntax as is used for class type
 parameters ("typeParameters?" in the grammar of the language).  Type parameters
 may be written with upper bounds using the "extends type" syntax.  The list of
 type parameters immediately follows the function name, enclosed in angle braces:
-```methodName<T_0 extends B_0, ..., T_n extends B_n>```.  The scope of the type parameters includes the return
+```funcName<T_0 extends B_0, ..., T_n extends B_n>```.  The scope of the type parameters includes the return
 type of the function, the formal parameter list of the function, and the
 function body.
 
@@ -531,9 +531,7 @@ closurization of a non-generic method, except that in the bodies of the
 extracted closures, the method ```m``` is invoked with ```<S_0, ..., S_n>``` as
 type parameters.  As with normal closurization, closurization of the same
 generic method on identical objects with equal types must produce results
-that compare equal:
-
-Iff ```identical(o1, o2) && S_0 == T_0 && ... && S_n == T_n``` then ```o1.m<S_0, ..., S_n> == o2.m<T_0, ... T_n>```
+that compare equal: ```identical(o1, o2) && S_0 == T_0 && ... && S_n == T_n``` iff ```o1.m<S_0, ..., S_n> == o2.m<T_0, ... T_n>```
 
 > Commentary: A more restrictive version of this would require identity on the
 > types as well as the receiver.  This seems overly strong, since it is not
@@ -566,7 +564,7 @@ function with the appropriate number of type parameters, all set to
 > Requiring canonicalization only for implicit instantiations might also be
 > acceptable.
 
-> Commentary: this also has the somewhat following somewhat surprising behavior
+> Commentary: this also has the following somewhat surprising behavior
 > (example from Gilad Bracha):
 >
 ```dart
